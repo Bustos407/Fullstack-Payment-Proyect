@@ -1,14 +1,12 @@
-import { Injectable, Optional, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Payment } from '../infrastructure/typeorm/payment.entity';
 import { PaymentStatus } from '../domain/payment-status.enum';
-import { CreatePaymentDto } from './dto/create-payment.dto';
 import { CreatePaymentWompiDto } from './dto/create-payment-wompi.dto';
 import { ProductsService } from '../../products/application/products.service';
 import { WompiClient, IWompiClient } from '../infrastructure/wompi/wompi.client';
 import { calculateTotal } from './constants';
-import { Result, ok, err } from './result';
 
 @Injectable()
 export class PaymentsService {
@@ -16,45 +14,11 @@ export class PaymentsService {
     @InjectRepository(Payment)
     private readonly paymentsRepository: Repository<Payment>,
     private readonly productsService: ProductsService,
-    @Optional()
     @Inject(WompiClient)
-    private readonly wompiClient: IWompiClient | null,
+    private readonly wompiClient: IWompiClient,
   ) {}
 
-  private async simulateWompiAuthorization(_: CreatePaymentDto, totalAmount: number): Promise<PaymentStatus> {
-    if (totalAmount > 1000000) {
-      return PaymentStatus.REJECTED;
-    }
-    return PaymentStatus.APPROVED;
-  }
-
-  /** Flujo mock: reserva stock y simula respuesta (sin API Wompi). ROP: retorna Result en lugar de lanzar. */
-  async createPayment(dto: CreatePaymentDto): Promise<Result<Payment, string>> {
-    try {
-      const product = await this.productsService.reserveStock(dto.productId, dto.units);
-      const subtotal = Number(product.price) * dto.units;
-      const totalAmount = calculateTotal(subtotal);
-      const status = await this.simulateWompiAuthorization(dto, totalAmount);
-
-      const payment = this.paymentsRepository.create({
-        product,
-        units: dto.units,
-        totalAmount,
-        status,
-        customerName: dto.customerName,
-        customerEmail: dto.customerEmail,
-        deliveryAddress: dto.deliveryAddress,
-      });
-
-      const saved = await this.paymentsRepository.save(payment);
-      return ok(saved);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Error al crear el pago';
-      return err(message);
-    }
-  }
-
-  /** Flujo real: crea transacción PENDING, llama API Wompi, actualiza según resultado. */
+  /** Crea pago usando API Wompi Sandbox. */
   async createPaymentWithWompi(dto: CreatePaymentWompiDto): Promise<Payment> {
     const product = await this.productsService.findOne(dto.productId);
     const subtotal = Number(product.price) * dto.units;
@@ -71,10 +35,6 @@ export class PaymentsService {
       deliveryAddress: dto.deliveryAddress,
     });
     const saved = await this.paymentsRepository.save(payment);
-
-    if (!this.wompiClient) {
-      throw new Error('Wompi no configurado: defina WOMPI_PRIVATE_KEY y WOMPI_INTEGRITY_SECRET');
-    }
 
     const wompiRes = await this.wompiClient.createTransaction({
       reference: saved.id,
@@ -109,9 +69,9 @@ export class PaymentsService {
 
   private async pollWompiUntilFinal(wompiId: string, maxAttempts = 30): Promise<string> {
     for (let i = 0; i < maxAttempts; i++) {
-      const res = await this.wompiClient!.getTransaction(wompiId);
+      const res = await this.wompiClient.getTransaction(wompiId);
       const status = res.data?.status ?? '';
-      if (this.wompiClient!.isFinalStatus(status)) {
+      if (this.wompiClient.isFinalStatus(status)) {
         return status;
       }
       await new Promise((r) => setTimeout(r, 2000));

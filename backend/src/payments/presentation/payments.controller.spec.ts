@@ -1,9 +1,8 @@
-import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from '../application/payments.service';
 import { PaymentStatus } from '../domain/payment-status.enum';
-import { CreatePaymentDto } from '../application/dto/create-payment.dto';
+import { CreatePaymentWompiDto } from '../application/dto/create-payment-wompi.dto';
 
 describe('PaymentsController', () => {
   let controller: PaymentsController;
@@ -15,13 +14,12 @@ describe('PaymentsController', () => {
     totalAmount: 40000,
   };
 
-  const validDto: CreatePaymentDto = {
+  const validDto: CreatePaymentWompiDto = {
     productId: 1,
     units: 2,
-    cardHolderName: 'Test',
-    cardNumber: '4111111111111111',
-    cardExp: '12/25',
-    cardCvv: '123',
+    cardToken: 'tok_xxx',
+    acceptanceToken: 'accept_xxx',
+    acceptPersonalAuth: 'auth_xxx',
     customerName: 'Test',
     customerEmail: 'test@example.com',
     deliveryAddress: 'Calle 123',
@@ -29,7 +27,7 @@ describe('PaymentsController', () => {
 
   beforeEach(async () => {
     const mockPaymentsService = {
-      createPayment: jest.fn(),
+      createPaymentWithWompi: jest.fn(),
       findOne: jest.fn(),
     };
 
@@ -51,16 +49,11 @@ describe('PaymentsController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('create delega en el servicio y retorna el pago cuando Result es ok', async () => {
-    service.createPayment.mockResolvedValue({ ok: true, value: mockPayment } as never);
+  it('create delega en createPaymentWithWompi y retorna el pago', async () => {
+    service.createPaymentWithWompi.mockResolvedValue(mockPayment as never);
     const result = await controller.create(validDto);
     expect(result).toEqual(mockPayment);
-    expect(service.createPayment).toHaveBeenCalledWith(validDto);
-  });
-
-  it('create lanza BadRequestException cuando Result es err', async () => {
-    service.createPayment.mockResolvedValue({ ok: false, error: 'Producto no encontrado' } as never);
-    await expect(controller.create(validDto)).rejects.toThrow(BadRequestException);
+    expect(service.createPaymentWithWompi).toHaveBeenCalledWith(validDto);
   });
 
   it('findOne delega en el servicio', async () => {

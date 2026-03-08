@@ -13,10 +13,9 @@ import { WompiClient } from './infrastructure/wompi/wompi.client';
     {
       provide: WompiClient,
       useFactory: (config: ConfigService) => {
-        const privateKey = config.get<string>('WOMPI_PRIVATE_KEY');
-        const integritySecret = config.get<string>('WOMPI_INTEGRITY_SECRET');
-        const baseUrl = config.get<string>('WOMPI_BASE_URL', 'https://sandbox.wompi.co/v1');
-        if (!privateKey || !integritySecret) return null;
+        const privateKey = config.get<string>('WOMPI_PRIVATE_KEY', 'prv_stagtest_5i0ZGIGiFcDQifYsXxvsny7Y37tKqFWg');
+        const integritySecret = config.get<string>('WOMPI_INTEGRITY_SECRET', 'stagtest_integrity_nAIBuqayW70XpUqJS4qf4STYiISd89Fp');
+        const baseUrl = config.get<string>('WOMPI_BASE_URL', 'https://api-sandbox.co.uat.wompi.dev/v1');
         return new WompiClient(baseUrl, privateKey, integritySecret);
       },
       inject: [ConfigService],

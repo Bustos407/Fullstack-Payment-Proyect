@@ -5,7 +5,6 @@ import { PaymentsService } from './payments.service';
 import { Payment } from '../infrastructure/typeorm/payment.entity';
 import { PaymentStatus } from '../domain/payment-status.enum';
 import { ProductsService } from '../../products/application/products.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
 import { CreatePaymentWompiDto } from './dto/create-payment-wompi.dto';
 import { WompiClient } from '../infrastructure/wompi/wompi.client';
 
@@ -19,18 +18,6 @@ describe('PaymentsService', () => {
     name: 'Test',
     price: 20000,
     stock: 10,
-  };
-
-  const validDto: CreatePaymentDto = {
-    productId: 1,
-    units: 2,
-    cardHolderName: 'Test User',
-    cardNumber: '4111111111111111',
-    cardExp: '12/25',
-    cardCvv: '123',
-    customerName: 'Test User',
-    customerEmail: 'test@example.com',
-    deliveryAddress: 'Calle 123',
   };
 
   const validWompiDto: CreatePaymentWompiDto = {
@@ -57,6 +44,12 @@ describe('PaymentsService', () => {
       findOne: jest.fn(),
     };
 
+    const mockWompiClient = {
+      createTransaction: jest.fn(),
+      getTransaction: jest.fn(),
+      isFinalStatus: jest.fn((s: string) => ['APPROVED', 'DECLINED', 'VOIDED', 'ERROR'].includes(s)),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentsService,
@@ -68,6 +61,10 @@ describe('PaymentsService', () => {
           provide: ProductsService,
           useValue: mockProductsService,
         },
+        {
+          provide: WompiClient,
+          useValue: mockWompiClient,
+        },
       ],
     }).compile();
 
@@ -78,56 +75,6 @@ describe('PaymentsService', () => {
 
   it('debería estar definido', () => {
     expect(service).toBeDefined();
-  });
-
-  describe('createPayment', () => {
-    it('reserva stock, calcula total y guarda pago aprobado', async () => {
-      productsService.reserveStock.mockResolvedValue(mockProduct as never);
-      const savedPayment = {
-        id: 'uuid-1',
-        product: mockProduct,
-        units: 2,
-        totalAmount: 40000 + 2000 + 5000,
-        status: PaymentStatus.APPROVED,
-        customerName: validDto.customerName,
-        customerEmail: validDto.customerEmail,
-        deliveryAddress: validDto.deliveryAddress,
-      };
-      paymentsRepository.create.mockReturnValue(savedPayment as never);
-      paymentsRepository.save.mockResolvedValue(savedPayment as never);
-
-      const result = await service.createPayment(validDto);
-
-      expect(result.ok).toBe(true);
-      if (result.ok) {
-        expect(result.value.status).toBe(PaymentStatus.APPROVED);
-        expect(result.value.totalAmount).toBe(47000);
-      }
-      expect(productsService.reserveStock).toHaveBeenCalledWith(1, 2);
-      expect(paymentsRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          product: mockProduct,
-          units: 2,
-          totalAmount: 47000,
-          status: PaymentStatus.APPROVED,
-          customerName: validDto.customerName,
-          customerEmail: validDto.customerEmail,
-          deliveryAddress: validDto.deliveryAddress,
-        }),
-      );
-      expect(paymentsRepository.save).toHaveBeenCalled();
-    });
-
-    it('retorna Err cuando reserveStock falla', async () => {
-      productsService.reserveStock.mockRejectedValue(new Error('Producto no encontrado'));
-
-      const result = await service.createPayment(validDto);
-
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error).toBe('Producto no encontrado');
-      }
-    });
   });
 
   describe('findOne', () => {
@@ -230,30 +177,6 @@ describe('PaymentsService', () => {
 
       expect(result.status).toBe(PaymentStatus.REJECTED);
       expect(paymentsRepository.update).toHaveBeenCalledWith('pay-uuid', { status: PaymentStatus.REJECTED });
-    });
-
-    it('lanza si wompiClient no está configurado', async () => {
-      const mockRepo = {
-        create: jest.fn(),
-        save: jest.fn(),
-        findOne: jest.fn(),
-        update: jest.fn(),
-      };
-      const savedPayment = { id: 'pay-uuid', product: mockProduct, units: 2, totalAmount: 47000, status: PaymentStatus.PENDING };
-      mockRepo.create.mockReturnValue(savedPayment as never);
-      mockRepo.save.mockResolvedValue(savedPayment as never);
-
-      const moduleNoWompi = await Test.createTestingModule({
-        providers: [
-          PaymentsService,
-          { provide: getRepositoryToken(Payment), useValue: mockRepo },
-          { provide: ProductsService, useValue: { findOne: jest.fn().mockResolvedValue(mockProduct) } },
-          { provide: WompiClient, useValue: null },
-        ],
-      }).compile();
-      const serviceNoWompi = moduleNoWompi.get<PaymentsService>(PaymentsService);
-
-      await expect(serviceNoWompi.createPaymentWithWompi(validWompiDto)).rejects.toThrow('Wompi no configurado');
     });
   });
 });
