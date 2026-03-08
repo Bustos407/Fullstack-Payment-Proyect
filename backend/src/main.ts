@@ -1,11 +1,13 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { HttpLoggingInterceptor } from './common/http-logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
 
   app.use(helmet());
   app.setGlobalPrefix('api');
@@ -20,6 +22,8 @@ async function bootstrap() {
 
   app.enableCors();
 
+  app.useGlobalInterceptors(new HttpLoggingInterceptor());
+
   const config = new DocumentBuilder()
     .setTitle('Checkout API')
     .setDescription('API REST para productos, pagos y stock. Integración con pasarela de pagos en Sandbox.')
@@ -32,10 +36,8 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  // eslint-disable-next-line no-console
-  console.log(`Backend escuchando en http://localhost:${port}/api`);
-  // eslint-disable-next-line no-console
-  console.log(`Swagger: http://localhost:${port}/api/docs`);
+  logger.log(`Backend escuchando en http://localhost:${port}/api`);
+  logger.log(`Swagger: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();
