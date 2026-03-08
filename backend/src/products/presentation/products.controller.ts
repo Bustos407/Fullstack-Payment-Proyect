@@ -1,7 +1,6 @@
 import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { ProductsService } from '../application/products.service';
-import { Product } from '../infrastructure/typeorm/product.entity';
+import { ProductsService, ProductResponse } from '../application/products.service';
 
 @ApiTags('products')
 @Controller('products')
@@ -13,7 +12,7 @@ export class ProductsController {
   @Get()
   @ApiOperation({ summary: 'List products with available stock' })
   @ApiResponse({ status: 200, description: 'List of products' })
-  async findAll(): Promise<Product[]> {
+  async findAll(): Promise<ProductResponse[]> {
     this.logger.log('GET /products - list products');
     const products = await this.productsService.findAll();
     this.logger.log(

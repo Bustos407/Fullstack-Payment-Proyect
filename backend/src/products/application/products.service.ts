@@ -1,29 +1,34 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Product } from '../infrastructure/typeorm/product.entity';
+import { ProductsDynamoRepository } from '../infrastructure/dynamodb/products.dynamodb.repository';
 import { ProductDomain } from '../domain/product.entity';
+
+export interface ProductResponse {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  stock: number;
+}
 
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Product)
-    private readonly productsRepository: Repository<Product>,
+    private readonly productsRepository: ProductsDynamoRepository,
   ) {}
 
-  async findAll(): Promise<Product[]> {
-    return this.productsRepository.find();
+  async findAll(): Promise<ProductResponse[]> {
+    return this.productsRepository.findAll();
   }
 
-  async findOne(id: number): Promise<Product> {
-    const product = await this.productsRepository.findOne({ where: { id } });
+  async findOne(id: number): Promise<ProductResponse> {
+    const product = await this.productsRepository.findById(id);
     if (!product) {
       throw new NotFoundException('Product not found');
     }
     return product;
   }
 
-  async reserveStock(productId: number, units: number): Promise<Product> {
+  async reserveStock(productId: number, units: number): Promise<ProductResponse> {
     if (units <= 0) {
       throw new BadRequestException('Units must be greater than zero');
     }
@@ -39,14 +44,13 @@ export class ProductsService {
 
     try {
       const updatedDomain = domain.reserveUnits(units);
+      await this.productsRepository.updateStock(productId, updatedDomain.stock);
 
-      const updated = await this.productsRepository.save({
+      return {
         ...product,
         stock: updatedDomain.stock,
-      });
-
-      return updated;
-    } catch (error) {
+      };
+    } catch {
       throw new BadRequestException('There is not enough stock to complete the purchase');
     }
   }
@@ -57,22 +61,13 @@ export class ProductsService {
       return;
     }
 
-    const products = this.productsRepository.create([
-      {
-        name: 'Premium subscription',
-        description: 'Unlimited access to the platform for 1 month.',
-        price: 20000,
-        stock: 10,
-      },
-      {
-        name: 'Gift card',
-        description: 'Digital gift card.',
-        price: 50000,
-        stock: 5,
-      },
-    ]);
+    const products: { id: number; name: string; description: string; price: string; stock: number }[] = [
+      { id: 1, name: 'Premium subscription', description: 'Unlimited access to the platform for 1 month.', price: '20000.00', stock: 10 },
+      { id: 2, name: 'Gift card', description: 'Digital gift card.', price: '50000.00', stock: 5 },
+    ];
 
-    await this.productsRepository.save(products);
+    for (const p of products) {
+      await this.productsRepository.save(p);
+    }
   }
 }
-

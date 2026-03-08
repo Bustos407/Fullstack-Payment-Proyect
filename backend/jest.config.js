@@ -12,7 +12,7 @@ module.exports = {
     '!main.ts',
     '!app.module.ts',
     '!**/*.module.ts',
-    '!**/infrastructure/typeorm/*.entity.ts',
+    '!**/infrastructure/dynamodb/*.ts',
     '!**/infrastructure/wompi/*.ts',
   ],
   coverageDirectory: '../coverage',

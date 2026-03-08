@@ -1,12 +1,10 @@
 import { Module, OnModuleInit } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Product } from './infrastructure/typeorm/product.entity';
+import { ProductsDynamoRepository } from './infrastructure/dynamodb/products.dynamodb.repository';
 import { ProductsService } from './application/products.service';
 import { ProductsController } from './presentation/products.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product])],
-  providers: [ProductsService],
+  providers: [ProductsDynamoRepository, ProductsService],
   controllers: [ProductsController],
   exports: [ProductsService],
 })
@@ -17,4 +15,3 @@ export class ProductsModule implements OnModuleInit {
     await this.productsService.seedIfEmpty();
   }
 }
-

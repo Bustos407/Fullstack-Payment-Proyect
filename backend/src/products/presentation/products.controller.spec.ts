@@ -1,20 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsController } from './products.controller';
-import { ProductsService } from '../application/products.service';
-import { Product } from '../infrastructure/typeorm/product.entity';
+import { ProductsService, ProductResponse } from '../application/products.service';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
   let service: jest.Mocked<ProductsService>;
 
-  const mockProducts: Product[] = [
+  const mockProducts: ProductResponse[] = [
     {
       id: 1,
       name: 'Product 1',
       description: 'Desc 1',
-      price: 10000,
+      price: '10000.00',
       stock: 5,
-    } as Product,
+    },
   ];
 
   beforeEach(async () => {

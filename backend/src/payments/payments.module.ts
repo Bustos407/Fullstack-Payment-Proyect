@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { PaymentsDynamoRepository } from './infrastructure/dynamodb/payments.dynamodb.repository';
 import { PaymentsService } from './application/payments.service';
 import { PaymentsController } from './presentation/payments.controller';
-import { Payment } from './infrastructure/typeorm/payment.entity';
 import { ProductsModule } from '../products/products.module';
 import { WompiClient } from './infrastructure/wompi/wompi.client';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payment]), ProductsModule, ConfigModule],
+  imports: [ProductsModule, ConfigModule],
   providers: [
+    PaymentsDynamoRepository,
     {
       provide: WompiClient,
       useFactory: (config: ConfigService) => {
@@ -25,4 +25,3 @@ import { WompiClient } from './infrastructure/wompi/wompi.client';
   controllers: [PaymentsController],
 })
 export class PaymentsModule {}
-
