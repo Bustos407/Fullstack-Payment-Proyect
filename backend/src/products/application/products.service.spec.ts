@@ -40,12 +40,12 @@ describe('ProductsService', () => {
     repository = module.get(getRepositoryToken(Product));
   });
 
-  it('debería estar definido', () => {
+  it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
   describe('findAll', () => {
-    it('debería retornar todos los productos', async () => {
+    it('should return all products', async () => {
       repository.find.mockResolvedValue([mockProduct]);
       const result = await service.findAll();
       expect(result).toEqual([mockProduct]);
@@ -54,28 +54,28 @@ describe('ProductsService', () => {
   });
 
   describe('findOne', () => {
-    it('debería retornar el producto si existe', async () => {
+    it('should return the product if it exists', async () => {
       repository.findOne.mockResolvedValue(mockProduct);
       const result = await service.findOne(1);
       expect(result).toEqual(mockProduct);
       expect(repository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
     });
 
-    it('debería lanzar NotFoundException si no existe', async () => {
+    it('should throw NotFoundException if product does not exist', async () => {
       repository.findOne.mockResolvedValue(null);
       await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
-      await expect(service.findOne(999)).rejects.toThrow('Producto no encontrado');
+      await expect(service.findOne(999)).rejects.toThrow('Product not found');
     });
   });
 
   describe('reserveStock', () => {
-    it('debería lanzar BadRequestException si units <= 0', async () => {
+    it('should throw BadRequestException if units <= 0', async () => {
       await expect(service.reserveStock(1, 0)).rejects.toThrow(BadRequestException);
-      await expect(service.reserveStock(1, -1)).rejects.toThrow('Las unidades deben ser mayores que cero');
+      await expect(service.reserveStock(1, -1)).rejects.toThrow('Units must be greater than zero');
       expect(repository.save).not.toHaveBeenCalled();
     });
 
-    it('debería actualizar el stock y guardar', async () => {
+    it('should update stock and save', async () => {
       repository.findOne.mockResolvedValue({ ...mockProduct });
       repository.save.mockImplementation((entity) => Promise.resolve({ ...entity } as Product));
       const result = await service.reserveStock(1, 3);
@@ -90,16 +90,24 @@ describe('ProductsService', () => {
   });
 
   describe('seedIfEmpty', () => {
-    it('no hace nada si ya hay productos', async () => {
+    it('does nothing if there are already products', async () => {
       repository.count.mockResolvedValue(1);
       await service.seedIfEmpty();
       expect(repository.create).not.toHaveBeenCalled();
       expect(repository.save).not.toHaveBeenCalled();
     });
 
-    it('crea y guarda productos si la tabla está vacía', async () => {
+    it('creates and saves products if table is empty', async () => {
       repository.count.mockResolvedValue(0);
-      const created = [{ id: 1, name: 'Suscripción Premium', description: 'Acceso ilimitado a la plataforma por 1 mes.', price: 20000, stock: 10 }];
+      const created = [
+        {
+          id: 1,
+          name: 'Premium subscription',
+          description: 'Unlimited access to the platform for 1 month.',
+          price: 20000,
+          stock: 10,
+        },
+      ];
       repository.create.mockReturnValue(created as unknown as Product);
       repository.save.mockResolvedValue(created[0] as unknown as Product);
       await service.seedIfEmpty();

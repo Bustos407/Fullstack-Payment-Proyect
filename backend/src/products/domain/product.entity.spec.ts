@@ -9,37 +9,37 @@ describe('ProductDomain', () => {
     stock: 5,
   };
 
-  it('debería crear una instancia con las props correctas', () => {
+  it('should create an instance with the correct props', () => {
     const product = new ProductDomain(baseProps);
     expect(product.id).toBe(1);
     expect(product.name).toBe('Test Product');
     expect(product.stock).toBe(5);
   });
 
-  it('canReserveUnits retorna true cuando hay stock suficiente', () => {
+  it('canReserveUnits returns true when there is enough stock', () => {
     const product = new ProductDomain(baseProps);
     expect(product.canReserveUnits(3)).toBe(true);
     expect(product.canReserveUnits(5)).toBe(true);
   });
 
-  it('canReserveUnits retorna false cuando no hay stock suficiente', () => {
+  it('canReserveUnits returns false when there is not enough stock', () => {
     const product = new ProductDomain(baseProps);
     expect(product.canReserveUnits(6)).toBe(false);
     expect(product.canReserveUnits(0)).toBe(false);
     expect(product.canReserveUnits(-1)).toBe(false);
   });
 
-  it('reserveUnits reduce el stock correctamente', () => {
+  it('reserveUnits reduces stock correctly', () => {
     const product = new ProductDomain(baseProps);
     const updated = product.reserveUnits(2);
     expect(updated.stock).toBe(3);
     expect(product.stock).toBe(5);
   });
 
-  it('reserveUnits lanza error si no hay stock suficiente', () => {
+  it('reserveUnits throws error if there is not enough stock', () => {
     const product = new ProductDomain(baseProps);
-    expect(() => product.reserveUnits(10)).toThrow('Stock insuficiente para reservar');
-    expect(() => product.reserveUnits(0)).toThrow('Stock insuficiente para reservar');
+    expect(() => product.reserveUnits(10)).toThrow('Insufficient stock to reserve');
+    expect(() => product.reserveUnits(0)).toThrow('Insufficient stock to reserve');
   });
 
   it('toJSON devuelve una copia de las props', () => {

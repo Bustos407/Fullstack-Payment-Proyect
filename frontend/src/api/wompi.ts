@@ -1,10 +1,10 @@
 /**
- * Cliente para la API de Wompi (tokenización y tokens de aceptación).
- * Documentación: https://docs.wompi.co/docs/colombia/inicio-rapido/
+ * Client for Wompi API (tokenization and acceptance tokens).
+ * Docs: https://docs.wompi.co/docs/colombia/inicio-rapido/
  */
 
 const getBaseUrl = () => import.meta.env.VITE_WOMPI_BASE_URL || 'https://api-sandbox.co.uat.wompi.dev/v1';
-/** Llave pública Sandbox del enunciado. Sobrescribir con VITE_WOMPI_PUBLIC_KEY si se desea. */
+/** Sandbox public key from the challenge. Override with VITE_WOMPI_PUBLIC_KEY if needed. */
 const getPublicKey = () => import.meta.env.VITE_WOMPI_PUBLIC_KEY || 'pub_stagtest_g2u0HQd3ZMh05hsSgTS2lUV8t3s4mOt7';
 
 export interface AcceptanceTokens {
@@ -33,7 +33,7 @@ export function isWompiEnabled(): boolean {
   return Boolean(getPublicKey());
 }
 
-/** Obtiene los tokens de aceptación del comercio (GET /merchants/:public_key). */
+/** Gets acceptance tokens for the merchant (GET /merchants/:public_key). */
 export async function getAcceptanceTokens(): Promise<AcceptanceTokens> {
   const baseUrl = getBaseUrl();
   const publicKey = getPublicKey();
@@ -59,11 +59,11 @@ export interface CardTokenRequest {
   card_holder: string;
 }
 
-/** Tokeniza una tarjeta (POST /tokens/cards). La llave pública va en Authorization. */
+/** Tokenizes a card (POST /tokens/cards). Public key goes in Authorization. */
 export async function tokenizeCard(card: CardTokenRequest): Promise<string> {
   const baseUrl = getBaseUrl();
   const publicKey = getPublicKey();
-  if (!publicKey) throw new Error('VITE_WOMPI_PUBLIC_KEY no configurada');
+  if (!publicKey) throw new Error('VITE_WOMPI_PUBLIC_KEY is not configured');
 
   const res = await fetch(`${baseUrl}/tokens/cards`, {
     method: 'POST',
@@ -89,19 +89,19 @@ export async function tokenizeCard(card: CardTokenRequest): Promise<string> {
       raw = await res.text();
     }
 
-    // Log detallado sólo a consola para depuración, no para el usuario final
+    // Detailed log only to console for debugging, not for the end user
     // eslint-disable-next-line no-console
     console.error('Wompi tokenize error', status, raw);
 
     if (status === 422) {
-      throw new Error('Los datos de la tarjeta no son válidos. Verifica número, fecha de expiración y CVV.');
+      throw new Error('Card data is not valid. Please check number, expiration date and CVV.');
     }
 
-    throw new Error('No se pudo tokenizar la tarjeta. Intenta nuevamente o usa otra tarjeta de prueba.');
+    throw new Error('We could not tokenize the card. Please try again or use another test card.');
   }
 
   const json = await res.json();
   const token = json?.data?.id;
-  if (!token) throw new Error('Wompi no devolvió token');
+  if (!token) throw new Error('Wompi did not return a token');
   return token;
 }

@@ -218,9 +218,15 @@ input:focus {
   min-height: var(--touch);
 }
 
-.checkbox-label input {
-  min-height: 1.25rem;
-  width: 1.25rem;
+.checkbox-label input[type='checkbox'] {
+  min-width: 1.1rem;
+  min-height: 1.1rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  accent-color: var(--primary);
 }
 
 .checkbox-label a {
@@ -269,6 +275,33 @@ input:focus {
   width: 2.5rem;
   height: 1.25rem;
   display: block;
+}
+
+/* Card field with visibility toggle (CVV) */
+.input-with-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-with-toggle input {
+  flex: 1;
+}
+
+.toggle-visibility {
+  min-height: var(--touch);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.toggle-visibility:hover {
+  background: #e2e8f0;
 }
 
 /* --- Actions --- */

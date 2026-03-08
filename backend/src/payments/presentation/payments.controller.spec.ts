@@ -45,18 +45,18 @@ describe('PaymentsController', () => {
     service = module.get(PaymentsService);
   });
 
-  it('debería estar definido', () => {
+  it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 
-  it('create delega en createPaymentWithWompi y retorna el pago', async () => {
+  it('create delegates to createPaymentWithWompi and returns the payment', async () => {
     service.createPaymentWithWompi.mockResolvedValue(mockPayment as never);
     const result = await controller.create(validDto);
     expect(result).toEqual(mockPayment);
     expect(service.createPaymentWithWompi).toHaveBeenCalledWith(validDto);
   });
 
-  it('findOne delega en el servicio', async () => {
+  it('findOne delegates to the service', async () => {
     service.findOne.mockResolvedValue(mockPayment as never);
     const result = await controller.findOne('uuid-1');
     expect(result).toEqual(mockPayment);

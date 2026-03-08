@@ -42,7 +42,7 @@ export interface CheckoutState {
 
 const STORAGE_KEY = 'wompi_checkout_state';
 
-/** Estado seguro para persistir: nunca guardar datos de tarjeta (PCI). */
+/** Safe state to persist: never store card data (PCI). */
 type PersistedCheckoutState = Omit<CheckoutState, 'cardInfo'>;
 
 const loadInitialState = (): CheckoutState => {
@@ -53,7 +53,7 @@ const loadInitialState = (): CheckoutState => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) return { step: 1 };
     const parsed = JSON.parse(stored) as PersistedCheckoutState;
-    // cardInfo nunca se persiste; si estábamos en paso 3, volver a 2 para reingresar tarjeta
+    // cardInfo is never persisted; if we were on step 3, go back to 2 to re-enter card details
     if (parsed.step === 3) {
       parsed.step = 2;
     }

@@ -18,7 +18,7 @@ export class PaymentsService {
     private readonly wompiClient: IWompiClient,
   ) {}
 
-  /** Crea pago usando API Wompi Sandbox. */
+  /** Creates a payment using Wompi Sandbox API. */
   async createPaymentWithWompi(dto: CreatePaymentWompiDto): Promise<Payment> {
     const product = await this.productsService.findOne(dto.productId);
     const subtotal = Number(product.price) * dto.units;

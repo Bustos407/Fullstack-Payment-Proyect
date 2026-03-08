@@ -36,11 +36,11 @@ describe('ProductsController', () => {
     service = module.get(ProductsService);
   });
 
-  it('debería estar definido', () => {
+  it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 
-  it('findAll retorna los productos del servicio', async () => {
+  it('findAll returns the products from the service', async () => {
     service.findAll.mockResolvedValue(mockProducts);
     const result = await controller.findAll();
     expect(result).toEqual(mockProducts);

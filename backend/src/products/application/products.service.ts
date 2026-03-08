@@ -18,14 +18,14 @@ export class ProductsService {
   async findOne(id: number): Promise<Product> {
     const product = await this.productsRepository.findOne({ where: { id } });
     if (!product) {
-      throw new NotFoundException('Producto no encontrado');
+      throw new NotFoundException('Product not found');
     }
     return product;
   }
 
   async reserveStock(productId: number, units: number): Promise<Product> {
     if (units <= 0) {
-      throw new BadRequestException('Las unidades deben ser mayores que cero');
+      throw new BadRequestException('Units must be greater than zero');
     }
 
     const product = await this.findOne(productId);
@@ -47,7 +47,7 @@ export class ProductsService {
 
       return updated;
     } catch (error) {
-      throw new BadRequestException('No hay stock suficiente para completar la compra');
+      throw new BadRequestException('There is not enough stock to complete the purchase');
     }
   }
 
@@ -59,14 +59,14 @@ export class ProductsService {
 
     const products = this.productsRepository.create([
       {
-        name: 'Suscripción Premium',
-        description: 'Acceso ilimitado a la plataforma por 1 mes.',
+        name: 'Premium subscription',
+        description: 'Unlimited access to the platform for 1 month.',
         price: 20000,
         stock: 10,
       },
       {
-        name: 'Gift Card',
-        description: 'Tarjeta de regalo digital.',
+        name: 'Gift card',
+        description: 'Digital gift card.',
         price: 50000,
         stock: 5,
       },

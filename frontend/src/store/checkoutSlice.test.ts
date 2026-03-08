@@ -24,35 +24,35 @@ describe('checkoutSlice', () => {
 
   const initialState: CheckoutState = { step: 1 };
 
-  it('debería tener step 1 por defecto', () => {
+  it('should have step 1 by default', () => {
     const state = checkoutReducer(undefined, { type: 'unknown' });
     expect(state.step).toBe(1);
     expect(state.productSelection).toBeUndefined();
   });
 
-  it('setStep actualiza el paso', () => {
+  it('setStep updates the step', () => {
     const state = checkoutReducer(initialState, setStep(3));
     expect(state.step).toBe(3);
   });
 
-  it('setProductSelection guarda selección y avanza a paso 2', () => {
+  it('setProductSelection saves selection and moves to step 2', () => {
     const selection: ProductSelection = { productId: 1, units: 2 };
     const state = checkoutReducer(initialState, setProductSelection(selection));
     expect(state.step).toBe(2);
     expect(state.productSelection).toEqual(selection);
   });
 
-  it('setCardAndDeliveryInfo guarda datos y avanza a paso 3', () => {
+  it('setCardAndDeliveryInfo saves data and moves to step 3', () => {
     const cardInfo: CardInfo = {
-      cardHolderName: 'Juan',
+      cardHolderName: 'John',
       cardNumber: '4111111111111111',
       cardExp: '12/25',
       cardCvv: '123',
     };
     const deliveryInfo: DeliveryInfo = {
-      customerName: 'Juan Pérez',
-      customerEmail: 'juan@test.com',
-      deliveryAddress: 'Calle 123',
+      customerName: 'John Doe',
+      customerEmail: 'john@test.com',
+      deliveryAddress: '123 Main St',
     };
     const state = checkoutReducer(
       { ...initialState, productSelection: { productId: 1, units: 1 } },
@@ -63,18 +63,18 @@ describe('checkoutSlice', () => {
     expect(state.deliveryInfo).toEqual(deliveryInfo);
   });
 
-  it('no persiste cardInfo en localStorage (seguridad)', () => {
+  it('does not persist cardInfo in localStorage (security)', () => {
     const setItemSpy = jest.spyOn(Storage.prototype, 'setItem');
     const cardInfo: CardInfo = {
-      cardHolderName: 'Juan',
+      cardHolderName: 'John',
       cardNumber: '4111111111111111',
       cardExp: '12/25',
       cardCvv: '123',
     };
     const deliveryInfo: DeliveryInfo = {
-      customerName: 'Juan Pérez',
-      customerEmail: 'juan@test.com',
-      deliveryAddress: 'Calle 123',
+      customerName: 'John Doe',
+      customerEmail: 'john@test.com',
+      deliveryAddress: '123 Main St',
     };
     checkoutReducer(
       { ...initialState, productSelection: { productId: 1, units: 1 } },
@@ -86,7 +86,7 @@ describe('checkoutSlice', () => {
     expect(stored.deliveryInfo).toEqual(deliveryInfo);
   });
 
-  it('setSummary guarda resumen y avanza a paso 4', () => {
+  it('setSummary saves summary and moves to step 4', () => {
     const summary: PaymentSummary = {
       paymentId: 'uuid-1',
       status: 'APPROVED',
@@ -97,7 +97,7 @@ describe('checkoutSlice', () => {
     expect(state.summary).toEqual(summary);
   });
 
-  it('reset limpia todo el estado', () => {
+  it('reset clears the whole state', () => {
     const stateWithData: CheckoutState = {
       step: 3,
       productSelection: { productId: 1, units: 2 },

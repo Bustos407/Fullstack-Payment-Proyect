@@ -26,10 +26,10 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Checkout API')
-    .setDescription('API REST para productos, pagos y stock. Integración con pasarela de pagos en Sandbox.')
+    .setDescription('REST API for products, payments and stock. Integration with payment gateway in Sandbox.')
     .setVersion('1.0')
-    .addTag('products', 'Productos y stock')
-    .addTag('payments', 'Pagos y transacciones')
+    .addTag('products', 'Products and stock')
+    .addTag('payments', 'Payments and transactions')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);

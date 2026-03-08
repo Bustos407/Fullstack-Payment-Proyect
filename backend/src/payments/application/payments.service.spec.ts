@@ -8,7 +8,7 @@ import { ProductsService } from '../../products/application/products.service';
 import { CreatePaymentWompiDto } from './dto/create-payment-wompi.dto';
 import { WompiClient } from '../infrastructure/wompi/wompi.client';
 
-describe('PaymentsService', () => {
+  describe('PaymentsService', () => {
   let service: PaymentsService;
   let paymentsRepository: jest.Mocked<Repository<Payment>>;
   let productsService: jest.Mocked<ProductsService>;
@@ -73,12 +73,12 @@ describe('PaymentsService', () => {
     productsService = module.get(ProductsService);
   });
 
-  it('debería estar definido', () => {
+  it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
   describe('findOne', () => {
-    it('debería retornar el pago si existe', async () => {
+    it('should return the payment if it exists', async () => {
       const payment = { id: 'uuid-1', status: PaymentStatus.APPROVED };
       paymentsRepository.findOne.mockResolvedValue(payment as never);
       const result = await service.findOne('uuid-1');
@@ -86,7 +86,7 @@ describe('PaymentsService', () => {
       expect(paymentsRepository.findOne).toHaveBeenCalledWith({ where: { id: 'uuid-1' } });
     });
 
-    it('debería retornar null si no existe', async () => {
+    it('should return null if it does not exist', async () => {
       paymentsRepository.findOne.mockResolvedValue(null);
       const result = await service.findOne('no-existe');
       expect(result).toBeNull();
@@ -125,7 +125,7 @@ describe('PaymentsService', () => {
       jest.clearAllMocks();
     });
 
-    it('crea pago PENDING, llama Wompi, actualiza a APPROVED y reserva stock', async () => {
+    it('creates payment in PENDING, calls Wompi, updates to APPROVED and reserves stock', async () => {
       const savedPayment = {
         id: 'pay-uuid',
         product: mockProduct,

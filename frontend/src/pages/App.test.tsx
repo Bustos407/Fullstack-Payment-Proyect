@@ -20,7 +20,7 @@ const store = configureStore({
 });
 
 describe('App', () => {
-  it('muestra header con título Checkout', () => {
+  it('shows header with title Checkout', () => {
     render(
       <Provider store={store}>
         <App />
@@ -29,13 +29,13 @@ describe('App', () => {
     expect(screen.getByText(/Checkout/)).toBeInTheDocument();
   });
 
-  it('muestra la página de productos', () => {
+  it('shows products page', () => {
     render(
       <Provider store={store}>
         <App />
       </Provider>,
     );
-    expect(screen.getByText(/Productos/)).toBeInTheDocument();
+    expect(screen.getByText(/Products/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Pay with credit card/i })).toBeInTheDocument();
   });
 });

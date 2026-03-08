@@ -39,7 +39,7 @@ export class ProductDomain {
 
   reserveUnits(units: number): ProductDomain {
     if (!this.canReserveUnits(units)) {
-      throw new Error('Stock insuficiente para reservar');
+      throw new Error('Insufficient stock to reserve');
     }
 
     return new ProductDomain({

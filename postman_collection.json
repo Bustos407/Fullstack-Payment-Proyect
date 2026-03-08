@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Checkout API",
-    "description": "Colección Postman para la API de productos y pagos.",
+    "description": "Postman collection for the products and payments API.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,12 +12,12 @@
       "name": "Products",
       "item": [
         {
-          "name": "Listar productos",
+          "name": "List products",
           "request": {
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/products",
-            "description": "Obtiene todos los productos con stock disponible."
+            "description": "Gets all products with available stock."
           }
         }
       ]
@@ -26,20 +26,20 @@
       "name": "Payments",
       "item": [
         {
-          "name": "Crear pago (Wompi Sandbox)",
+          "name": "Create payment (Wompi Sandbox)",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"productId\": 1,\n  \"units\": 1,\n  \"cardToken\": \"tok_card_xxx\",\n  \"acceptanceToken\": \"...\",\n  \"acceptPersonalAuth\": \"...\",\n  \"installments\": 1,\n  \"customerName\": \"Juan Pérez\",\n  \"customerEmail\": \"cliente@ejemplo.com\",\n  \"deliveryAddress\": \"Calle 123 #45-67\"\n}"
+              "raw": "{\n  \"productId\": 1,\n  \"units\": 1,\n  \"cardToken\": \"tok_card_xxx\",\n  \"acceptanceToken\": \"...\",\n  \"acceptPersonalAuth\": \"...\",\n  \"installments\": 1,\n  \"customerName\": \"John Doe\",\n  \"customerEmail\": \"customer@example.com\",\n  \"deliveryAddress\": \"123 Main St\"\n}"
             },
             "url": "{{baseUrl}}/payments",
-            "description": "Crea un pago con API Wompi Sandbox. Requiere cardToken del frontend."
+            "description": "Creates a payment with Wompi Sandbox API. Requires cardToken from the frontend."
           }
         },
         {
-          "name": "Obtener pago por ID",
+          "name": "Get payment by ID",
           "request": {
             "method": "GET",
             "header": [],
@@ -49,7 +49,7 @@
               "path": ["payments", ":id"],
               "variable": [{ "key": "id", "value": "" }]
             },
-            "description": "Obtiene un pago por su UUID."
+            "description": "Gets a payment by its UUID."
           }
         }
       ]

@@ -11,12 +11,16 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar productos con stock disponible' })
-  @ApiResponse({ status: 200, description: 'Lista de productos' })
+  @ApiOperation({ summary: 'List products with available stock' })
+  @ApiResponse({ status: 200, description: 'List of products' })
   async findAll(): Promise<Product[]> {
-    this.logger.log('GET /products - listar productos');
+    this.logger.log('GET /products - list products');
     const products = await this.productsService.findAll();
-    this.logger.log(`GET /products - OK, ${products.length} producto(s): ${products.map((p) => `${p.name}(stock:${p.stock})`).join(', ')}`);
+    this.logger.log(
+      `GET /products - OK, ${products.length} product(s): ${products
+        .map((p) => `${p.name}(stock:${p.stock})`)
+        .join(', ')}`,
+    );
     return products;
   }
 }

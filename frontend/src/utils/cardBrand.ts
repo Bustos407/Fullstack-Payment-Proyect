@@ -1,8 +1,8 @@
 /**
- * Detecta la marca de la tarjeta por el número (BIN).
- * Visa: empieza con 4
- * Mastercard: 51-55 o 2221-2720
- * American Express: 34 o 37
+ * Detects the card brand by the number (BIN).
+ * Visa: starts with 4
+ * Mastercard: 51-55 or 2221-2720
+ * American Express: 34 or 37
  */
 export type CardBrand = 'visa' | 'mastercard' | 'amex';
 

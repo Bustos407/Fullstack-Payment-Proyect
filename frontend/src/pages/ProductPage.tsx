@@ -50,6 +50,7 @@ export const ProductPage: React.FC = () => {
   const [summaryProduct, setSummaryProduct] = useState<Product | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [showCvv, setShowCvv] = useState(false);
 
   useEffect(() => {
     axios
@@ -115,7 +116,7 @@ export const ProductPage: React.FC = () => {
 
   const handleConfirmPayment = async () => {
     if (!checkout.wompiAcceptance || !checkout.cardInfo || !checkout.productSelection || !checkout.deliveryInfo) {
-      setPaymentError('Faltan datos. Cierra y vuelve a completar tarjeta y entrega.');
+      setPaymentError('Missing data. Close and complete card and delivery details again.');
       return;
     }
     setPaymentLoading(true);
@@ -153,19 +154,36 @@ export const ProductPage: React.FC = () => {
         const backendMessage = Array.isArray(data?.message) ? data.message.join(', ') : data?.message;
 
         if (status === 400 && backendMessage) {
-          setPaymentError(`No se pudo completar el pago por el siguiente motivo: ${backendMessage}`);
+          setPaymentError(`We could not complete the payment for the following reason: ${backendMessage}`);
         } else if (backendMessage) {
-          setPaymentError(`No se pudo procesar el pago: ${backendMessage}`);
+          setPaymentError(`We could not process the payment: ${backendMessage}`);
         } else {
-          setPaymentError(`No se pudo procesar el pago (código ${status}).`);
+          setPaymentError(`We could not process the payment (status code ${status}).`);
         }
       } else {
-        const message = err instanceof Error ? err.message : 'No se pudo procesar el pago';
+        const message = err instanceof Error ? err.message : 'We could not process the payment';
         setPaymentError(message);
       }
     } finally {
       setPaymentLoading(false);
     }
+  };
+
+  const handleBackToCard = () => {
+    setShowSummaryBackdrop(false);
+    setShowCardModal(true);
+    setPaymentError(null);
+  };
+
+  const handleExitAfterError = () => {
+    setShowSummaryBackdrop(false);
+    setShowCardModal(false);
+    setPaymentError(null);
+    dispatch(reset());
+    axios
+      .get<Product[]>('/api/products')
+      .then((res) => setProducts(res.data))
+      .catch(() => {});
   };
 
   const handleBackToProducts = () => {
@@ -206,8 +224,8 @@ export const ProductPage: React.FC = () => {
   return (
     <>
       <section>
-        <h2>Productos</h2>
-        <p className="text-muted">Selecciona producto, unidades y paga con tarjeta de crédito.</p>
+        <h2>Products</h2>
+        <p className="text-muted">Select a product, choose units and pay with credit card.</p>
         <div className="card-list">
           {products.map((product) => (
             <button
@@ -225,7 +243,7 @@ export const ProductPage: React.FC = () => {
         </div>
         <div className="form-row">
           <label htmlFor="units">
-            Unidades
+            Units
             <input
               id="units"
               type="number"
@@ -251,12 +269,12 @@ export const ProductPage: React.FC = () => {
       {showCardModal && (
         <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
           <div className="modal">
-            <h2 id="modal-title">Datos de tarjeta y entrega</h2>
+            <h2 id="modal-title">Card and delivery details</h2>
             <form onSubmit={handleCardModalSubmit} className="form-grid">
               <div className="card">
-                <h3>Tarjeta de crédito</h3>
+                <h3>Credit card</h3>
                 <label>
-                  Nombre del titular
+                  Cardholder name
                   <input
                     type="text"
                     value={cardInfo.cardHolderName}
@@ -265,7 +283,7 @@ export const ProductPage: React.FC = () => {
                   />
                 </label>
                 <label>
-                  Número de tarjeta
+                  Card number
                   <div className="input-with-logo">
                     <input
                       type="text"
@@ -281,7 +299,7 @@ export const ProductPage: React.FC = () => {
                 </label>
                 <div className="form-row-inline">
                   <label>
-                    Expiración (MM/YY)
+                    Expiration (MM/YY)
                     <input
                       type="text"
                       inputMode="numeric"
@@ -293,21 +311,31 @@ export const ProductPage: React.FC = () => {
                   </label>
                   <label>
                     CVV
-                    <input
-                      type="password"
-                      inputMode="numeric"
-                      maxLength={4}
-                      value={cardInfo.cardCvv}
-                      onChange={(e) => handleCardCvvChange(e.target.value)}
-                      required
-                    />
+                    <div className="input-with-toggle">
+                      <input
+                        type={showCvv ? 'text' : 'password'}
+                        inputMode="numeric"
+                        maxLength={4}
+                        value={cardInfo.cardCvv}
+                        onChange={(e) => handleCardCvvChange(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="toggle-visibility"
+                        onClick={() => setShowCvv((prev) => !prev)}
+                        aria-label={showCvv ? 'Hide CVV' : 'Show CVV'}
+                      >
+                        {showCvv ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
                   </label>
                 </div>
               </div>
               <div className="card">
-                <h3>Datos de entrega</h3>
+                <h3>Delivery details</h3>
                 <label>
-                  Nombre completo
+                  Full name
                   <input
                     type="text"
                     value={deliveryInfo.customerName}
@@ -316,7 +344,7 @@ export const ProductPage: React.FC = () => {
                   />
                 </label>
                 <label>
-                  Correo electrónico
+                  Email
                   <input
                     type="email"
                     value={deliveryInfo.customerEmail}
@@ -325,7 +353,7 @@ export const ProductPage: React.FC = () => {
                   />
                 </label>
                 <label>
-                  Dirección de entrega
+                  Delivery address
                   <input
                     type="text"
                     value={deliveryInfo.deliveryAddress}
@@ -336,23 +364,23 @@ export const ProductPage: React.FC = () => {
               </div>
               {wompiEnabled && (
                 <div className="card">
-                  <h3>Aceptación de términos (Wompi)</h3>
+                  <h3>Terms acceptance (Wompi)</h3>
                   {!acceptance ? (
-                    <p className="text-muted">Cargando términos...</p>
+                    <p className="text-muted">Loading terms...</p>
                   ) : (
                   <>
                   <label className="checkbox-label">
                     <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} required />
-                    He leído y acepto los{' '}
+                    I have read and accept the{' '}
                     <a href={acceptance.termsPermalink} target="_blank" rel="noopener noreferrer">
-                      Términos y condiciones
+                      Terms and conditions
                     </a>
                   </label>
                   <label className="checkbox-label">
                     <input type="checkbox" checked={acceptPersonal} onChange={(e) => setAcceptPersonal(e.target.checked)} required={wompiEnabled} />
-                    He leído y acepto la{' '}
+                    I have read and accept the{' '}
                     <a href={acceptance.personalDataPermalink} target="_blank" rel="noopener noreferrer">
-                      Autorización de datos personales
+                      Personal data authorization
                     </a>
                   </label>
                   </>
@@ -361,10 +389,10 @@ export const ProductPage: React.FC = () => {
               )}
               <div className="actions">
                 <button type="button" className="secondary" onClick={handleCloseCardModal}>
-                  Cerrar
+                  Close
                 </button>
                 <button type="submit" className="primary" disabled={wompiEnabled && (!acceptance || !acceptTerms || !acceptPersonal)}>
-                  Continuar al resumen
+                  Continue to summary
                 </button>
               </div>
             </form>
@@ -372,39 +400,47 @@ export const ProductPage: React.FC = () => {
         </div>
       )}
 
-      {/* Backdrop: Summary + Payment button, then Result + Volver a productos */}
+      {/* Backdrop: Summary + Payment button, then Result + back to products */}
       {showSummaryBackdrop && (
         <div className="backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="backdrop-title">
           <div className="backdrop-content">
             {!showResult ? (
               <>
-                <h2 id="backdrop-title">Resumen de pago</h2>
+                <h2 id="backdrop-title">Payment summary</h2>
                 {paymentError && <p className="error">{paymentError}</p>}
                 <div className="card">
-                  <p>Producto: {summaryProduct?.name ?? 'Cargando...'}</p>
-                  <p>Unidades: {units}</p>
+                  <p>Product: {summaryProduct?.name ?? 'Loading...'}</p>
+                  <p>Units: {units}</p>
                   <p>Product amount: ${subtotal.toLocaleString()}</p>
                   <p>Base fee: ${BASE_FEE.toLocaleString()}</p>
                   <p>Delivery Fee: ${DELIVERY_FEE.toLocaleString()}</p>
                   <p className="price">Total: ${total.toLocaleString()}</p>
                 </div>
                 <div className="actions">
-                  <button type="button" className="primary" onClick={handleConfirmPayment} disabled={paymentLoading}>
-                    {paymentLoading ? 'Procesando...' : 'Payment'}
+                  <button type="button" className="secondary" onClick={handleBackToCard} disabled={paymentLoading}>
+                    Back to details
+                  </button>
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={paymentError ? handleExitAfterError : handleConfirmPayment}
+                    disabled={paymentLoading}
+                  >
+                    {paymentError ? 'Exit' : paymentLoading ? 'Processing...' : 'Payment'}
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <h2 id="backdrop-title">Resultado del pago</h2>
+                <h2 id="backdrop-title">Payment result</h2>
                 <div className={`card status-card status-card--${checkout.summary!.status === 'APPROVED' ? 'success' : 'error'}`}>
-                  <p>{checkout.summary!.status === 'APPROVED' ? 'Pago aprobado' : 'Pago rechazado'}</p>
+                  <p>{checkout.summary!.status === 'APPROVED' ? 'Payment approved' : 'Payment rejected'}</p>
                   <p>Total: ${checkout.summary!.totalAmount.toLocaleString()}</p>
-                  <p>ID transacción: {checkout.summary!.paymentId}</p>
+                  <p>Transaction ID: {checkout.summary!.paymentId}</p>
                 </div>
                 <div className="actions">
                   <button type="button" className="primary" onClick={handleBackToProducts}>
-                    Volver a productos
+                    Back to products
                   </button>
                 </div>
               </>

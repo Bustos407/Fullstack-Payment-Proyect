@@ -6,7 +6,7 @@ interface CardBrandLogoProps {
   className?: string;
 }
 
-/** Wordmarks minimalistas en color oficial (estilo formularios de pago). */
+/** Minimal wordmarks in official colors (payment-form style). */
 const VisaLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg viewBox="0 0 32 12" className={className} aria-label="Visa" role="img">
     <text

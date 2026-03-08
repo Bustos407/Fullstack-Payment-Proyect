@@ -15,8 +15,8 @@ jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 const mockProducts = [
-  { id: 1, name: 'Producto A', description: 'Desc A', price: 20000, stock: 5 },
-  { id: 2, name: 'Producto B', description: 'Desc B', price: 50000, stock: 3 },
+  { id: 1, name: 'Product A', description: 'Desc A', price: 20000, stock: 5 },
+  { id: 2, name: 'Product B', description: 'Desc B', price: 50000, stock: 3 },
 ];
 
 const renderWithStore = () => {
@@ -39,30 +39,30 @@ describe('ProductPage', () => {
     mockedAxios.get.mockResolvedValue({ data: mockProducts });
   });
 
-  it('muestra productos al cargar', async () => {
+  it('shows products on load', async () => {
     renderWithStore();
-    expect(await screen.findByText('Producto A')).toBeInTheDocument();
-    expect(await screen.findByText('Producto B')).toBeInTheDocument();
+    expect(await screen.findByText('Product A')).toBeInTheDocument();
+    expect(await screen.findByText('Product B')).toBeInTheDocument();
     expect(screen.getByText(/Stock: 5/)).toBeInTheDocument();
   });
 
-  it('muestra botón Pay with credit card', async () => {
+  it('shows Pay with credit card button', async () => {
     renderWithStore();
     expect(await screen.findByRole('button', { name: /Pay with credit card/i })).toBeInTheDocument();
   });
 
-  it('selecciona producto y despacha al hacer clic en Pay with credit card', async () => {
+  it('selects product and dispatches when clicking Pay with credit card', async () => {
     const { store } = renderWithStore();
-    await screen.findByText('Producto A');
-    fireEvent.click(screen.getByText('Producto A'));
+    await screen.findByText('Product A');
+    fireEvent.click(screen.getByText('Product A'));
     fireEvent.click(screen.getByRole('button', { name: /Pay with credit card/i }));
     expect(store.getState().checkout.productSelection).toEqual({ productId: 1, units: 1 });
   });
 
-  it('permite cambiar unidades', async () => {
+  it('allows changing units', async () => {
     renderWithStore();
-    await screen.findByText('Producto A');
-    const input = screen.getByRole('spinbutton', { name: /Unidades/i });
+    await screen.findByText('Product A');
+    const input = screen.getByRole('spinbutton', { name: /Units/i });
     fireEvent.change(input, { target: { value: '3' } });
     expect((input as HTMLInputElement).value).toBe('3');
   });
