@@ -176,6 +176,27 @@ export const ProductPage: React.FC = () => {
     axios.get<Product[]>('/api/products').then((res) => setProducts(res.data)).catch(() => {});
   };
 
+  const handleCardNumberChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 16);
+    const groups = digits.match(/.{1,4}/g);
+    const formatted = groups ? groups.join(' ') : '';
+    setCardInfo((prev) => ({ ...prev, cardNumber: formatted }));
+  };
+
+  const handleCardExpChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    let formatted = digits;
+    if (digits.length > 2) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+    setCardInfo((prev) => ({ ...prev, cardExp: formatted }));
+  };
+
+  const handleCardCvvChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    setCardInfo((prev) => ({ ...prev, cardCvv: digits }));
+  };
+
   const units = checkout.productSelection?.units ?? 0;
   const price = summaryProduct ? Number(summaryProduct.price) : 0;
   const subtotal = price * units;
@@ -248,8 +269,10 @@ export const ProductPage: React.FC = () => {
                   <div className="input-with-logo">
                     <input
                       type="text"
+                      inputMode="numeric"
+                      maxLength={19}
                       value={cardInfo.cardNumber}
-                      onChange={(e) => setCardInfo((p) => ({ ...p, cardNumber: e.target.value }))}
+                      onChange={(e) => handleCardNumberChange(e.target.value)}
                       placeholder="4242 4242 4242 4242"
                       required
                     />
@@ -261,8 +284,10 @@ export const ProductPage: React.FC = () => {
                     Expiración (MM/YY)
                     <input
                       type="text"
+                      inputMode="numeric"
+                      maxLength={5}
                       value={cardInfo.cardExp}
-                      onChange={(e) => setCardInfo((p) => ({ ...p, cardExp: e.target.value }))}
+                      onChange={(e) => handleCardExpChange(e.target.value)}
                       required
                     />
                   </label>
@@ -270,8 +295,10 @@ export const ProductPage: React.FC = () => {
                     CVV
                     <input
                       type="password"
+                      inputMode="numeric"
+                      maxLength={4}
                       value={cardInfo.cardCvv}
-                      onChange={(e) => setCardInfo((p) => ({ ...p, cardCvv: e.target.value }))}
+                      onChange={(e) => handleCardCvvChange(e.target.value)}
                       required
                     />
                   </label>
