@@ -9,14 +9,13 @@ phases:
       - npm install -g npm@latest
   pre_build:
     commands:
-      - cd backend
+      - cd $CODEBUILD_SRC_DIR/backend
       - npm install
   build:
     commands:
-      - cd backend && npm run build
-      - cd ..
+      - cd $CODEBUILD_SRC_DIR/backend && npm run build
       - yum install -y zip || true
-      - cd backend && zip -r ../backend-deploy.zip . -x "node_modules/*" -x ".env" -x ".git/*" && cd ..
+      - cd $CODEBUILD_SRC_DIR/backend && zip -r $CODEBUILD_SRC_DIR/backend-deploy.zip . -x "node_modules/*" -x ".env" -x ".git/*"
 
 artifacts:
   files:
