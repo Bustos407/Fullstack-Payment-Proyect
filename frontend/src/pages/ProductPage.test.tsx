@@ -6,6 +6,11 @@ import axios from 'axios';
 import { ProductPage } from './ProductPage';
 import { checkoutReducer } from '../store/checkoutSlice';
 
+jest.mock('../api/wompi', () => ({
+  isWompiEnabled: jest.fn(() => false),
+  getAcceptanceTokens: jest.fn(),
+  tokenizeCard: jest.fn(),
+}));
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -41,16 +46,16 @@ describe('ProductPage', () => {
     expect(screen.getByText(/Stock: 5/)).toBeInTheDocument();
   });
 
-  it('muestra botón Pagar con tarjeta', async () => {
+  it('muestra botón Pay with credit card', async () => {
     renderWithStore();
-    expect(await screen.findByRole('button', { name: /Pagar con tarjeta/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Pay with credit card/i })).toBeInTheDocument();
   });
 
-  it('selecciona producto y despacha al hacer clic en Pagar', async () => {
+  it('selecciona producto y despacha al hacer clic en Pay with credit card', async () => {
     const { store } = renderWithStore();
     await screen.findByText('Producto A');
     fireEvent.click(screen.getByText('Producto A'));
-    fireEvent.click(screen.getByRole('button', { name: /Pagar con tarjeta/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Pay with credit card/i }));
     expect(store.getState().checkout.productSelection).toEqual({ productId: 1, units: 1 });
   });
 
