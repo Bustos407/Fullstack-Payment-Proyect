@@ -173,67 +173,26 @@ Test card examples (Sandbox):
 
 Use any future expiration date and a 3–4 digit CVV.
 
-## Deploying to AWS (for reviewers / technical test)
+## Deploying to AWS (summary)
 
-So that evaluators can open a URL and test the app, deploy **backend** and **frontend** in the same AWS account (DynamoDB and tables already created).
+Backend and frontend live in the **same repo**. Deploy so evaluators can open a URL and test the app (DynamoDB and tables must already exist in your AWS account).
 
-### 1. Backend (Elastic Beanstalk)
+### Backend: Elastic Beanstalk + GitHub (CodePipeline)
 
-1. In AWS Console go to **Elastic Beanstalk → Create application**.
-2. **Platform**: Node.js; **Application code**: Upload your code (zip the `backend` folder after `npm install` and `npm run build`, or use a pipeline).
-3. In the environment, go to **Configuration → Software → Environment properties** and add:
-   - `WOMPI_PRIVATE_KEY` = (tu clave privada Wompi Sandbox)
-   - `WOMPI_INTEGRITY_SECRET` = (tu integrity secret)
-   - `WOMPI_BASE_URL` = `https://api-sandbox.co.uat.wompi.dev/v1`
-   - `DYNAMODB_REGION` = `us-east-2`
-   - `DYNAMO_PRODUCTS_TABLE` = `wompi-products`
-   - `DYNAMO_PAYMENTS_TABLE` = `wompi-payments`
-4. **Configuration → Security**: set the **IAM instance profile** to a role that has DynamoDB access. Create a role with this policy (replace region/account if needed):
+- **IAM**: Create an **EC2 role** (e.g. `wompi-eb-role`) with DynamoDB access (policy on `wompi-products` and `wompi-payments`). Attach it as the **instance profile** in the EB environment. Use a **service role** for Elastic Beanstalk (e.g. `aws-elasticbeanstalk-service-role` or create one).
+- **EB**: Create an application and environment (Node.js). Use **Sample application** to create the env; the pipeline will replace it. In **Configuration → Software → Environment properties** add: `WOMPI_PRIVATE_KEY`, `WOMPI_INTEGRITY_SECRET`, `WOMPI_BASE_URL` = `https://api-sandbox.co.uat.wompi.dev/v1`, `DYNAMODB_REGION`, `DYNAMO_PRODUCTS_TABLE`, `DYNAMO_PAYMENTS_TABLE`. Do **not** put AWS access keys (the instance uses the IAM role).
+- **CodePipeline**: Create a pipeline with **Source** = GitHub (Version 2), **Build** = CodeBuild (use `buildspec.yml` at repo root; it builds `backend/` and outputs `backend-deploy.zip`), **Deploy** = Elastic Beanstalk (your app and environment). Each push to the chosen branch builds and deploys the backend. If deploy fails, add **AWSElasticBeanstalkFullAccess** to the pipeline’s IAM role.
 
-```json
-{
-  "Effect": "Allow",
-  "Action": [
-    "dynamodb:GetItem",
-    "dynamodb:PutItem",
-    "dynamodb:UpdateItem",
-    "dynamodb:Scan",
-    "dynamodb:Query",
-    "dynamodb:BatchGetItem"
-  ],
-  "Resource": [
-    "arn:aws:dynamodb:us-east-2:*:table/wompi-products",
-    "arn:aws:dynamodb:us-east-2:*:table/wompi-payments"
-  ]
-}
-```
+### Frontend: S3 static hosting
 
-5. Deploy and note the environment URL, e.g. `https://wompi-api.us-east-2.elasticbeanstalk.com`. The API base for the frontend is that URL **without** `/api` (e.g. `https://wompi-api.us-east-2.elasticbeanstalk.com`), because the app will call `/api/products` and `/api/payments` relative to that base.
+- Build with the backend URL: `VITE_API_URL=https://YOUR-EB-URL.elasticbeanstalk.com` (no trailing slash) then `npm run build` in `frontend/`.
+- Create an S3 bucket, enable **Static website hosting** (index and error: `index.html`), upload the contents of `frontend/dist`, and set a **bucket policy** for public read so the site is reachable. The URL to share is the bucket website endpoint (or a CloudFront distribution if you use one).
 
-### 2. Frontend (S3 + static hosting)
+### What to share with evaluators
 
-1. Build the frontend **pointing to your backend URL**:
-   ```bash
-   cd frontend
-   npm install
-   # Replace with your real Elastic Beanstalk URL (no trailing slash):
-   set VITE_API_URL=https://TU-ENVIRONMENT.us-east-2.elasticbeanstalk.com
-   npm run build
-   ```
-   (On Linux/Mac use `export VITE_API_URL=...`.)
-
-2. Create an **S3 bucket** (e.g. `wompi-checkout-front`), enable **Static website hosting** (index: `index.html`, error: `index.html` for SPA).
-3. Upload the contents of `frontend/dist` to the bucket (all files in the root of the bucket).
-4. Set the bucket policy so the contents are public (for static hosting), or use **CloudFront** in front of S3 and use the CloudFront URL.
-5. The URL to share with reviewers is either:
-   - **S3 website URL**: `http://bucket-name.s3-website.region.amazonaws.com`, or  
-   - **CloudFront URL**: `https://xxxxx.cloudfront.net` if you added a distribution.
-
-### 3. What to send to evaluators
-
-- **Frontend URL**: the S3 website URL or CloudFront URL (so they open the app in the browser).
-- **Backend API (optional)**: the Elastic Beanstalk URL + `/api/docs` for Swagger, e.g. `https://wompi-api.us-east-2.elasticbeanstalk.com/api/docs`.
-- **Test cards (Sandbox)**: Approved `4242 4242 4242 4242`, Declined `4111 1111 1111 1111`; any future expiry and 3–4 digit CVV.
+- **App URL**: the S3 (or CloudFront) frontend URL.
+- **Swagger (optional)**: `https://YOUR-EB-URL.elasticbeanstalk.com/api/docs`.
+- **Sandbox test cards**: Approved `4242 4242 4242 4242`, Declined `4111 1111 1111 1111`; any future expiry and 3–4 digit CVV.
 
 ## Testing
 

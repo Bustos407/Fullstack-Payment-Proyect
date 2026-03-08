@@ -1,0 +1,21 @@
+# CodeBuild: build backend and produce zip for Elastic Beanstalk
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+  pre_build:
+    commands:
+      - cd backend
+      - npm ci
+  build:
+    commands:
+      - npm run build
+      - cd ..
+      - cd backend && zip -r ../backend-deploy.zip . -x "node_modules/*" -x ".env" -x ".git/*" && cd ..
+
+artifacts:
+  files:
+    - backend-deploy.zip
+  name: deploy-package
