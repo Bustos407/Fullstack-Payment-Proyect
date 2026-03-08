@@ -1,0 +1,58 @@
+{
+  "info": {
+    "name": "Checkout API",
+    "description": "Colección Postman para la API de productos y pagos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api" }
+  ],
+  "item": [
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Listar productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/products",
+            "description": "Obtiene todos los productos con stock disponible."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Crear pago (Wompi Sandbox)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"units\": 1,\n  \"cardToken\": \"tok_card_xxx\",\n  \"acceptanceToken\": \"...\",\n  \"acceptPersonalAuth\": \"...\",\n  \"installments\": 1,\n  \"customerName\": \"Juan Pérez\",\n  \"customerEmail\": \"cliente@ejemplo.com\",\n  \"deliveryAddress\": \"Calle 123 #45-67\"\n}"
+            },
+            "url": "{{baseUrl}}/payments",
+            "description": "Crea un pago con API Wompi Sandbox. Requiere cardToken del frontend."
+          }
+        },
+        {
+          "name": "Obtener pago por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            },
+            "description": "Obtiene un pago por su UUID."
+          }
+        }
+      ]
+    }
+  ]
+}
