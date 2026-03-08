@@ -51,15 +51,15 @@ export const ProductPage: React.FC = () => {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  const wompiEnabled = isWompiEnabled();
-  const cardBrand = getCardBrand(cardInfo.cardNumber);
-
   useEffect(() => {
     axios
       .get<Product[]>('/api/products')
       .then((res) => setProducts(res.data))
       .catch(() => {});
   }, []);
+
+  const wompiEnabled = isWompiEnabled();
+  const cardBrand = getCardBrand(cardInfo.cardNumber);
 
   useEffect(() => {
     if (!wompiEnabled || !showCardModal) return;
@@ -78,6 +78,20 @@ export const ProductPage: React.FC = () => {
       })
       .catch(() => {});
   }, [showSummaryBackdrop, checkout.productSelection?.productId]);
+
+  // Evitar scroll del contenido de fondo cuando hay modal o backdrop abiertos
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const { classList } = document.body;
+    if (showCardModal || showSummaryBackdrop) {
+      classList.add('no-scroll');
+    } else {
+      classList.remove('no-scroll');
+    }
+    return () => {
+      classList.remove('no-scroll');
+    };
+  }, [showCardModal, showSummaryBackdrop]);
 
   const handlePayWithCard = () => {
     if (!selected.productId || selected.units <= 0) return;
@@ -133,8 +147,22 @@ export const ProductPage: React.FC = () => {
       const total = calculateCheckoutTotal(subtotal);
       dispatch(setSummary({ paymentId: payment.id, status: payment.status, totalAmount: total }));
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'No se pudo procesar el pago';
-      setPaymentError(message);
+      if (axios.isAxiosError(err) && err.response) {
+        const status = err.response.status;
+        const data: any = err.response.data;
+        const backendMessage = Array.isArray(data?.message) ? data.message.join(', ') : data?.message;
+
+        if (status === 400 && backendMessage) {
+          setPaymentError(`No se pudo completar el pago por el siguiente motivo: ${backendMessage}`);
+        } else if (backendMessage) {
+          setPaymentError(`No se pudo procesar el pago: ${backendMessage}`);
+        } else {
+          setPaymentError(`No se pudo procesar el pago (código ${status}).`);
+        }
+      } else {
+        const message = err instanceof Error ? err.message : 'No se pudo procesar el pago';
+        setPaymentError(message);
+      }
     } finally {
       setPaymentLoading(false);
     }

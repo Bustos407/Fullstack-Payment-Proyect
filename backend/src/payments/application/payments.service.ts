@@ -36,35 +36,40 @@ export class PaymentsService {
     });
     const saved = await this.paymentsRepository.save(payment);
 
-    const wompiRes = await this.wompiClient.createTransaction({
-      reference: saved.id,
-      amountInCents,
-      customerEmail: dto.customerEmail,
-      acceptanceToken: dto.acceptanceToken,
-      acceptPersonalAuth: dto.acceptPersonalAuth,
-      cardToken: dto.cardToken,
-      installments: dto.installments ?? 1,
-    });
+    try {
+      const wompiRes = await this.wompiClient.createTransaction({
+        reference: saved.id,
+        amountInCents,
+        customerEmail: dto.customerEmail,
+        acceptanceToken: dto.acceptanceToken,
+        acceptPersonalAuth: dto.acceptPersonalAuth,
+        cardToken: dto.cardToken,
+        installments: dto.installments ?? 1,
+      });
 
-    const wompiId = wompiRes.data?.id;
-    if (!wompiId) {
+      const wompiId = wompiRes.data?.id;
+      if (!wompiId) {
+        await this.paymentsRepository.update(saved.id, { status: PaymentStatus.REJECTED });
+        const updated = await this.paymentsRepository.findOne({ where: { id: saved.id } });
+        return updated!;
+      }
+
+      await this.paymentsRepository.update(saved.id, { wompiTransactionId: wompiId });
+
+      const finalStatus = await this.pollWompiUntilFinal(wompiId);
+      const ourStatus = finalStatus === 'APPROVED' ? PaymentStatus.APPROVED : PaymentStatus.REJECTED;
+
+      if (ourStatus === PaymentStatus.APPROVED) {
+        await this.productsService.reserveStock(dto.productId, dto.units);
+      }
+
+      await this.paymentsRepository.update(saved.id, { status: ourStatus });
+      const finalPayment = await this.paymentsRepository.findOne({ where: { id: saved.id } });
+      return finalPayment!;
+    } catch (error) {
       await this.paymentsRepository.update(saved.id, { status: PaymentStatus.REJECTED });
-      const updated = await this.paymentsRepository.findOne({ where: { id: saved.id } });
-      return updated!;
+      throw error;
     }
-
-    await this.paymentsRepository.update(saved.id, { wompiTransactionId: wompiId });
-
-    const finalStatus = await this.pollWompiUntilFinal(wompiId);
-    const ourStatus = finalStatus === 'APPROVED' ? PaymentStatus.APPROVED : PaymentStatus.REJECTED;
-
-    if (ourStatus === PaymentStatus.APPROVED) {
-      await this.productsService.reserveStock(dto.productId, dto.units);
-    }
-
-    await this.paymentsRepository.update(saved.id, { status: ourStatus });
-    const finalPayment = await this.paymentsRepository.findOne({ where: { id: saved.id } });
-    return finalPayment!;
   }
 
   private async pollWompiUntilFinal(wompiId: string, maxAttempts = 30): Promise<string> {

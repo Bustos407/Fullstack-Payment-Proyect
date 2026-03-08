@@ -37,14 +37,18 @@ export class ProductsService {
       stock: product.stock,
     });
 
-    const updatedDomain = domain.reserveUnits(units);
+    try {
+      const updatedDomain = domain.reserveUnits(units);
 
-    const updated = await this.productsRepository.save({
-      ...product,
-      stock: updatedDomain.stock,
-    });
+      const updated = await this.productsRepository.save({
+        ...product,
+        stock: updatedDomain.stock,
+      });
 
-    return updated;
+      return updated;
+    } catch (error) {
+      throw new BadRequestException('No hay stock suficiente para completar la compra');
+    }
   }
 
   async seedIfEmpty(): Promise<void> {

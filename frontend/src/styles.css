@@ -35,6 +35,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+body.no-scroll {
+  overflow: hidden;
+}
+
 .app-container {
   min-height: 100vh;
   min-height: calc(100vh - var(--safe-bottom));

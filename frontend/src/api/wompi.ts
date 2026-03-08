@@ -81,8 +81,23 @@ export async function tokenizeCard(card: CardTokenRequest): Promise<string> {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Wompi tokenize: ${res.status} ${text}`);
+    const status = res.status;
+    let raw: unknown = null;
+    try {
+      raw = await res.json();
+    } catch {
+      raw = await res.text();
+    }
+
+    // Log detallado sólo a consola para depuración, no para el usuario final
+    // eslint-disable-next-line no-console
+    console.error('Wompi tokenize error', status, raw);
+
+    if (status === 422) {
+      throw new Error('Los datos de la tarjeta no son válidos. Verifica número, fecha de expiración y CVV.');
+    }
+
+    throw new Error('No se pudo tokenizar la tarjeta. Intenta nuevamente o usa otra tarjeta de prueba.');
   }
 
   const json = await res.json();
