@@ -19,7 +19,8 @@ export interface PaymentRecord {
   customerEmail: string;
   deliveryAddress: string;
   wompiTransactionId?: string | null;
-  createdAt: string;
+  /** Timestamp in milliseconds (epoch). */
+  createdAt: number;
 }
 
 @Injectable()
@@ -43,7 +44,7 @@ export class PaymentsDynamoRepository {
     deliveryAddress: string;
   }): Promise<PaymentRecord> {
     const id = randomUUID();
-    const now = new Date().toISOString();
+    const createdAt = Date.now();
     const record: PaymentRecord = {
       id,
       productId: data.productId,
@@ -54,7 +55,7 @@ export class PaymentsDynamoRepository {
       customerEmail: data.customerEmail,
       deliveryAddress: data.deliveryAddress,
       wompiTransactionId: null,
-      createdAt: now,
+      createdAt,
     };
 
     await this.docClient.send(

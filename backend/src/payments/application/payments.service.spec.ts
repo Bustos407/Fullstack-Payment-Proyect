@@ -135,7 +135,7 @@ describe('PaymentsService', () => {
         customerEmail: validWompiDto.customerEmail,
         deliveryAddress: validWompiDto.deliveryAddress,
         wompiTransactionId: null,
-        createdAt: new Date().toISOString(),
+        createdAt: Date.now(),
       };
       paymentsRepository.create.mockResolvedValue(savedPayment);
       paymentsRepository.findById.mockResolvedValue({ ...savedPayment, status: PaymentStatus.APPROVED });
@@ -168,7 +168,7 @@ describe('PaymentsService', () => {
         customerEmail: validWompiDto.customerEmail,
         deliveryAddress: validWompiDto.deliveryAddress,
         wompiTransactionId: null,
-        createdAt: new Date().toISOString(),
+        createdAt: Date.now(),
       };
       paymentsRepository.create.mockResolvedValue(savedPayment);
       paymentsRepository.findById.mockResolvedValue({ ...savedPayment, status: PaymentStatus.REJECTED });

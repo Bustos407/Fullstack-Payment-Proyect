@@ -16,7 +16,8 @@ export interface PaymentResponse {
   customerEmail: string;
   deliveryAddress: string;
   wompiTransactionId: string | null;
-  createdAt: string;
+  /** Timestamp in milliseconds (epoch). */
+  createdAt: number;
 }
 
 @Injectable()
@@ -81,7 +82,8 @@ export class PaymentsService {
     }
   }
 
-  private toResponse(record: { id: string; productId: number; units: number; totalAmount: string; status: PaymentStatus; customerName: string; customerEmail: string; deliveryAddress: string; wompiTransactionId?: string | null; createdAt: string }): PaymentResponse {
+  private toResponse(record: { id: string; productId: number; units: number; totalAmount: string; status: PaymentStatus; customerName: string; customerEmail: string; deliveryAddress: string; wompiTransactionId?: string | null; createdAt: number | string }): PaymentResponse {
+    const createdAt = typeof record.createdAt === 'number' ? record.createdAt : new Date(record.createdAt).getTime();
     return {
       id: record.id,
       productId: record.productId,
@@ -92,7 +94,7 @@ export class PaymentsService {
       customerEmail: record.customerEmail,
       deliveryAddress: record.deliveryAddress,
       wompiTransactionId: record.wompiTransactionId ?? null,
-      createdAt: record.createdAt,
+      createdAt,
     };
   }
 
