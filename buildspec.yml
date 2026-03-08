@@ -5,14 +5,17 @@ phases:
   install:
     runtime-versions:
       nodejs: 20
+    commands:
+      - npm install -g npm@latest
   pre_build:
     commands:
       - cd backend
-      - npm ci
+      - npm install
   build:
     commands:
-      - npm run build
+      - cd backend && npm run build
       - cd ..
+      - yum install -y zip || true
       - cd backend && zip -r ../backend-deploy.zip . -x "node_modules/*" -x ".env" -x ".git/*" && cd ..
 
 artifacts:
