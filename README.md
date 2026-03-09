@@ -23,7 +23,6 @@ SPA de checkout para una tienda pequeña. El usuario selecciona un producto, ind
 - Reserva de stock cuando el pago es aprobado.
 - Seed automático de productos en DynamoDB al iniciar el backend.
 - Despliegue preparado para AWS:
-  - `buildspec.yml` para CodeBuild
   - script `deploy-ec2.sh` para actualizar una EC2
 
 ## Estructura
@@ -31,7 +30,6 @@ SPA de checkout para una tienda pequeña. El usuario selecciona un producto, ind
 ```text
 ├── backend/
 ├── frontend/
-├── buildspec.yml
 ├── deploy-ec2.sh
 └── README.md
 ```
@@ -155,10 +153,7 @@ npm test
 
 ## Despliegue
 
-Este repositorio quedó preparado para dos caminos:
-
-- **Elastic Beanstalk + CodePipeline** para backend
-- **EC2 + Nginx + PM2** para frontend y backend en la misma instancia
+El repositorio quedó preparado para desplegar frontend y backend en una **EC2** usando **Nginx + PM2**.
 
 Para EC2 existe el script:
 
