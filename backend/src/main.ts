@@ -33,9 +33,15 @@ async function bootstrap() {
     .addTag('payments', 'Payments and transactions')
     .build();
   const document = SwaggerModule.createDocument(app, config);
+  const swaggerCdn = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0';
   SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: { persistAuthorization: true },
     customSiteTitle: 'Checkout API Docs',
+    customCssUrl: `${swaggerCdn}/swagger-ui.css`,
+    customJs: [
+      `${swaggerCdn}/swagger-ui-bundle.js`,
+      `${swaggerCdn}/swagger-ui-standalone-preset.js`,
+    ],
+    swaggerOptions: { persistAuthorization: true },
   });
 
   const port = process.env.PORT || 3000;
