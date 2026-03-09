@@ -8,7 +8,7 @@ SPA de checkout para una tienda pequeña. El usuario selecciona un producto, ind
 - **Backend:** NestJS, TypeScript
 - **Persistencia:** AWS DynamoDB
 
-## Qué se implementó
+## Implementacion
 
 - Listado de productos con `name`, `description`, `price` y `stock`.
 - Flujo de compra en una sola página:
