@@ -33,7 +33,10 @@ async function bootstrap() {
     .addTag('payments', 'Payments and transactions')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: { persistAuthorization: true },
+    customSiteTitle: 'Checkout API Docs',
+  });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
