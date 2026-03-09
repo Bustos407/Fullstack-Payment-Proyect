@@ -154,6 +154,12 @@ npm test
 
 El repositorio quedó preparado para desplegar frontend y backend en una **EC2** usando **Nginx + PM2**.
 
+### URLs desplegadas
+
+- Frontend: `http://3.137.112.50/`
+- API products: `http://3.137.112.50/api/products`
+- API docs JSON: `http://3.137.112.50/api/docs-json`
+
 ## Notas
 
 - El backend usa `Helmet` y `ValidationPipe`.
