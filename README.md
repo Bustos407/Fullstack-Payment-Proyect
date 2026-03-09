@@ -46,7 +46,6 @@ Base URL local: `http://localhost:3000/api`
 Documentación local:
 
 - Swagger UI: `http://localhost:3000/api/docs`
-- Postman: [`postman_collection.json`](./postman_collection.json)
 
 ## Correr en local
 
