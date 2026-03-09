@@ -30,7 +30,6 @@ SPA de checkout para una tienda pequeña. El usuario selecciona un producto, ind
 ```text
 ├── backend/
 ├── frontend/
-├── deploy-ec2.sh
 └── README.md
 ```
 
