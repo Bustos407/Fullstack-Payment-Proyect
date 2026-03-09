@@ -10,7 +10,21 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
 
-  app.use(helmet());
+  const swaggerCdn = 'https://cdn.jsdelivr.net';
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          'default-src': ["'self'", swaggerCdn],
+          'script-src': ["'self'", "'unsafe-inline'", swaggerCdn],
+          'style-src': ["'self'", "'unsafe-inline'", swaggerCdn],
+          'connect-src': ["'self'", swaggerCdn],
+          'img-src': ["'self'", 'data:', swaggerCdn],
+          'font-src': ["'self'", swaggerCdn],
+        },
+      },
+    }),
+  );
   app.setGlobalPrefix('api');
 
   app.useGlobalPipes(
@@ -33,13 +47,13 @@ async function bootstrap() {
     .addTag('payments', 'Payments and transactions')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  const swaggerCdn = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0';
+  const swaggerUiBase = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0';
   SwaggerModule.setup('api/docs', app, document, {
     customSiteTitle: 'Checkout API Docs',
-    customCssUrl: `${swaggerCdn}/swagger-ui.css`,
+    customCssUrl: `${swaggerUiBase}/swagger-ui.css`,
     customJs: [
-      `${swaggerCdn}/swagger-ui-bundle.js`,
-      `${swaggerCdn}/swagger-ui-standalone-preset.js`,
+      `${swaggerUiBase}/swagger-ui-bundle.js`,
+      `${swaggerUiBase}/swagger-ui-standalone-preset.js`,
     ],
     swaggerOptions: { persistAuthorization: true },
   });
