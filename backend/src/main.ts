@@ -10,17 +10,18 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
 
-  const swaggerCdn = 'https://cdn.jsdelivr.net';
+  const cdnOrigins = ['https://cdn.jsdelivr.net', 'https://unpkg.com'];
   app.use(
     helmet({
+      crossOriginOpenerPolicy: false,
       contentSecurityPolicy: {
         directives: {
-          'default-src': ["'self'", swaggerCdn],
-          'script-src': ["'self'", "'unsafe-inline'", swaggerCdn],
-          'style-src': ["'self'", "'unsafe-inline'", swaggerCdn],
-          'connect-src': ["'self'", swaggerCdn],
-          'img-src': ["'self'", 'data:', swaggerCdn],
-          'font-src': ["'self'", swaggerCdn],
+          'default-src': ["'self'", ...cdnOrigins],
+          'script-src': ["'self'", "'unsafe-inline'", ...cdnOrigins],
+          'style-src': ["'self'", "'unsafe-inline'", ...cdnOrigins],
+          'connect-src': ["'self'", ...cdnOrigins],
+          'img-src': ["'self'", 'data:', ...cdnOrigins],
+          'font-src': ["'self'", ...cdnOrigins],
         },
       },
     }),
@@ -47,7 +48,7 @@ async function bootstrap() {
     .addTag('payments', 'Payments and transactions')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  const swaggerUiBase = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0';
+  const swaggerUiBase = 'https://unpkg.com/swagger-ui-dist@5.9.0';
   SwaggerModule.setup('api/docs', app, document, {
     customSiteTitle: 'Checkout API Docs',
     customCssUrl: `${swaggerUiBase}/swagger-ui.css`,
@@ -55,6 +56,7 @@ async function bootstrap() {
       `${swaggerUiBase}/swagger-ui-bundle.js`,
       `${swaggerUiBase}/swagger-ui-standalone-preset.js`,
     ],
+    customfavIcon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/></svg>',
     swaggerOptions: { persistAuthorization: true },
   });
 
