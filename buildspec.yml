@@ -16,8 +16,10 @@ phases:
       - cd $CODEBUILD_SRC_DIR/backend && npm run build
       - yum install -y zip || true
       - cd $CODEBUILD_SRC_DIR/backend && zip -r $CODEBUILD_SRC_DIR/backend-deploy.zip . -x "node_modules/*" -x ".env" -x ".git/*"
+      - cd $CODEBUILD_SRC_DIR && mkdir -p deploy-output && unzip -o backend-deploy.zip -d deploy-output
 
 artifacts:
+  base-directory: deploy-output
   files:
-    - backend-deploy.zip
+    - '**/*'
   name: deploy-package
