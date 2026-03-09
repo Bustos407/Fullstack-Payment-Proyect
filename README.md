@@ -1,67 +1,59 @@
 # FullStack Payment Checkout
 
-Single Page Application that simulates a small store where a user can pick a product, enter card and delivery data and pay using the **Wompi Sandbox API**.  
-The frontend is a React SPA, the backend is a NestJS API, and data is stored in **AWS DynamoDB**.
+SPA de checkout para una tienda pequeña. El usuario selecciona un producto, indica unidades, completa datos de tarjeta y entrega, revisa un resumen con tarifas y realiza el pago usando **Wompi Sandbox**. El backend guarda productos y transacciones en **AWS DynamoDB**.
 
-## Tech stack
+## Stack
 
-- **Frontend**: React 18, TypeScript, Vite, Redux Toolkit
-- **Backend**: NestJS, TypeScript
-- **Database**: AWS DynamoDB
+- **Frontend:** React 18, TypeScript, Vite, Redux Toolkit
+- **Backend:** NestJS, TypeScript
+- **Persistencia:** AWS DynamoDB
 
-## Project layout
+## Qué se implementó
+
+- Listado de productos con `name`, `description`, `price` y `stock`.
+- Flujo de compra en una sola página:
+  - selección de producto y unidades
+  - modal con tarjeta y datos de entrega
+  - resumen de pago con producto, tarifa base y envío
+  - resultado final aprobado o rechazado
+- Integración con **Wompi Sandbox**:
+  - tokenización de tarjeta desde frontend
+  - creación de pago `PENDING` en backend
+  - consulta del resultado y actualización de estado
+- Reserva de stock cuando el pago es aprobado.
+- Seed automático de productos en DynamoDB al iniciar el backend.
+- Despliegue preparado para AWS:
+  - `buildspec.yml` para CodeBuild
+  - script `deploy-ec2.sh` para actualizar una EC2
+
+## Estructura
 
 ```text
-├── backend/          # NestJS REST API
-├── frontend/        # React SPA + Redux
+├── backend/
+├── frontend/
+├── buildspec.yml
+├── deploy-ec2.sh
 └── README.md
-```
-
-## Domain model
-
-```text
-products (DynamoDB table)
-├── id (PK, Number)
-├── name
-├── description
-├── price (String)
-└── stock (Number)
-
-payments (DynamoDB table)
-├── id (PK, String UUID)
-├── productId
-├── units
-├── totalAmount
-├── status (PENDING | APPROVED | REJECTED)
-├── customerName
-├── customerEmail
-├── deliveryAddress
-├── wompiTransactionId (nullable)
-└── createdAt
 ```
 
 ## API
 
-Base URL (local): `http://localhost:3000/api`
+Base URL local: `http://localhost:3000/api`
 
-| Method | Route              | Description                                                |
-|--------|--------------------|------------------------------------------------------------|
-| GET    | `/products`        | Returns products with available stock                     |
-| POST   | `/payments`        | Creates a payment using Wompi Sandbox (card + tokens)     |
-| GET    | `/payments/:id`    | Returns a payment by its UUID                             |
+| Method | Route | Description |
+|---|---|---|
+| GET | `/products` | Lista productos con stock |
+| POST | `/payments` | Crea un pago usando Wompi |
+| GET | `/payments/:id` | Consulta una transacción |
 
-### Docs
+Documentación local:
 
-- **Swagger UI**: `http://localhost:3000/api/docs`
-- **Postman collection**: [`postman_collection.json`](./postman_collection.json)
+- Swagger UI: `http://localhost:3000/api/docs`
+- Postman: [`postman_collection.json`](./postman_collection.json)
 
-## Running the project locally
+## Correr en local
 
-### 1. Create DynamoDB tables (AWS)
-
-Create two tables in your AWS account (Console or CLI):
-
-**Products table** (`wompi-products` by default):
+### 1. Crear tablas en DynamoDB
 
 ```bash
 aws dynamodb create-table \
@@ -69,11 +61,7 @@ aws dynamodb create-table \
   --attribute-definitions AttributeName=id,AttributeType=N \
   --key-schema AttributeName=id,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST
-```
 
-**Payments table** (`wompi-payments` by default):
-
-```bash
 aws dynamodb create-table \
   --table-name wompi-payments \
   --attribute-definitions AttributeName=id,AttributeType=S \
@@ -81,20 +69,11 @@ aws dynamodb create-table \
   --billing-mode PAY_PER_REQUEST
 ```
 
-Ensure your AWS credentials are configured (`aws configure` or environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`).
+También puedes crearlas desde la consola de AWS. Debes tener credenciales configuradas en local.
 
-### 2. Backend (NestJS)
+### 2. Configurar variables de entorno
 
-```bash
-cd backend
-npm install
-cp .env.example .env   # if needed, adjust variables
-npm run start:dev
-```
-
-The API will be available at `http://localhost:3000/api`.
-
-**Backend environment variables** (`backend/.env`):
+**`backend/.env`**
 
 ```env
 # Wompi Sandbox
@@ -108,9 +87,26 @@ DYNAMO_PRODUCTS_TABLE=wompi-products
 DYNAMO_PAYMENTS_TABLE=wompi-payments
 ```
 
-On first run, the backend seeds the products table with two default products if it is empty.
+**`frontend/.env`**
 
-### 3. Frontend (React + Vite)
+```env
+VITE_WOMPI_PUBLIC_KEY=pub_stagtest_...
+VITE_WOMPI_BASE_URL=https://api-sandbox.co.uat.wompi.dev/v1
+```
+
+### 3. Levantar backend
+
+```bash
+cd backend
+npm install
+npm run start:dev
+```
+
+Al iniciar, el backend inserta automáticamente los productos faltantes en la tabla `wompi-products`.
+
+### 4. Levantar frontend
+
+En otra terminal:
 
 ```bash
 cd frontend
@@ -118,137 +114,63 @@ npm install
 npm run dev
 ```
 
-The SPA will be available at `http://localhost:5173`.
+## Cómo probar en local
 
-## Application flow (frontend)
+### Probar la API
 
-1. **Products**  
-   The user sees the list of products with price and stock and chooses one and the number of units.
+- Productos: `http://localhost:3000/api/products`
+- Swagger: `http://localhost:3000/api/docs`
 
-2. **Card and delivery modal**  
-   A modal asks for:
-   - Cardholder name  
-   - Card number (with brand detection and basic formatting)  
-   - Expiration and CVV (with a small "Show/Hide" toggle for CVV while testing)  
-   - Delivery name, email and address  
-   - Wompi terms and personal–data authorizations (using the Sandbox merchant endpoints)
+### Probar la aplicación
 
-3. **Payment summary (backdrop)**  
-   A backdrop overlays the page and shows:
-   - Product amount  
-   - Base fee  
-   - Delivery fee  
-   - Total amount  
-   The user can go **back to details** or click **Payment**.
+- Frontend: `http://localhost:5173`
+- Selecciona un producto.
+- Ingresa unidades.
+- Abre el modal de tarjeta.
+- Completa tarjeta, entrega y aceptación de términos.
+- Confirma el pago en el resumen.
 
-4. **Payment processing**  
-   - Frontend tokenizes the card with Wompi (`/tokens/cards`).  
-   - Backend creates a local `Payment` in `PENDING` in DynamoDB.  
-   - Backend calls Wompi to create the transaction and polls until a final status.  
-   - If approved, stock is reserved; in any failure the payment is marked as `REJECTED`.
+Tarjetas de prueba de Wompi Sandbox:
 
-5. **Result screen**  
-   The user sees whether the payment was **approved** or **rejected**, the total amount and the transaction ID.  
-   From there they can go back to the products screen (the list is reloaded so stock is up to date).
+- Aprobada: `4242 4242 4242 4242`
+- Rechazada: `4111 1111 1111 1111`
 
-The checkout state is stored in Redux and a safe subset is persisted in `localStorage` (card data is **never** persisted).
+Usa cualquier fecha futura y CVV de 3 o 4 dígitos.
 
-## Sandbox configuration (Wompi)
+## Tests
 
-This project only calls the **Wompi Sandbox API**: `https://api-sandbox.co.uat.wompi.dev/v1`.
-
-Default Sandbox keys from the challenge are wired through `.env` files and can be replaced if needed.
-
-**Frontend** (`frontend/.env`):
-
-```env
-VITE_WOMPI_PUBLIC_KEY=pub_stagtest_...
-VITE_WOMPI_BASE_URL=https://api-sandbox.co.uat.wompi.dev/v1
-```
-
-Test card examples (Sandbox):
-
-- Approved: `4242 4242 4242 4242`
-- Declined: `4111 1111 1111 1111`
-
-Use any future expiration date and a 3–4 digit CVV.
-
-## Deploying to AWS (summary)
-
-Backend and frontend live in the **same repo**. Deploy so evaluators can open a URL and test the app (DynamoDB and tables must already exist in your AWS account).
-
-### Backend: Elastic Beanstalk + GitHub (CodePipeline)
-
-- **IAM**: Create an **EC2 role** (e.g. `wompi-eb-role`) with DynamoDB access (policy on `wompi-products` and `wompi-payments`). Attach it as the **instance profile** in the EB environment. Use a **service role** for Elastic Beanstalk (e.g. `aws-elasticbeanstalk-service-role` or create one).
-- **EB**: Create an application and environment (Node.js). Use **Sample application** to create the env; the pipeline will replace it. In **Configuration → Software → Environment properties** add: `WOMPI_PRIVATE_KEY`, `WOMPI_INTEGRITY_SECRET`, `WOMPI_BASE_URL` = `https://api-sandbox.co.uat.wompi.dev/v1`, `DYNAMODB_REGION`, `DYNAMO_PRODUCTS_TABLE`, `DYNAMO_PAYMENTS_TABLE`. Do **not** put AWS access keys (the instance uses the IAM role).
-- **CodePipeline**: Create a pipeline with **Source** = GitHub (Version 2), **Build** = CodeBuild (use `buildspec.yml` at repo root; it builds `backend/` and outputs `backend-deploy.zip`), **Deploy** = Elastic Beanstalk (your app and environment). Each push to the chosen branch builds and deploys the backend. If deploy fails, add **AWSElasticBeanstalkFullAccess** to the pipeline’s IAM role.
-
-### Frontend: S3 static hosting
-
-- Build with the backend URL: `VITE_API_URL=https://YOUR-EB-URL.elasticbeanstalk.com` (no trailing slash) then `npm run build` in `frontend/`.
-- Create an S3 bucket, enable **Static website hosting** (index and error: `index.html`), upload the contents of `frontend/dist`, and set a **bucket policy** for public read so the site is reachable. The URL to share is the bucket website endpoint (or a CloudFront distribution if you use one).
-
-### What to share with evaluators
-
-- **App URL**: the S3 (or CloudFront) frontend URL.
-- **Swagger (optional)**: `https://YOUR-EB-URL.elasticbeanstalk.com/api/docs`.
-- **Sandbox test cards**: Approved `4242 4242 4242 4242`, Declined `4111 1111 1111 1111`; any future expiry and 3–4 digit CVV.
-
-## Testing
-
-### Backend
+**Backend**
 
 ```bash
 cd backend
-npm test        # unit tests
-npm run test:cov
+npm test
 ```
 
-Main areas covered:
-
-- Product domain (`ProductDomain`) and stock rules  
-- Product service (`ProductsService`): find, reserve stock, seeding  
-- Payment service (`PaymentsService`): creating payments, Wompi calls, status updates  
-- Controllers for products and payments
-
-### Frontend
+**Frontend**
 
 ```bash
 cd frontend
-npm test        # unit tests
-npm run test:cov
+npm test
 ```
 
-Main areas covered:
+## Despliegue
 
-- Redux slice (`checkoutSlice`), including persistence rules (no card data in `localStorage`).  
-- Main page (`ProductPage`): product loading, unit changes, button behaviour.  
-- App shell (`App`): basic rendering and wiring.
+Este repositorio quedó preparado para dos caminos:
 
-## Architecture (short version)
+- **Elastic Beanstalk + CodePipeline** para backend
+- **EC2 + Nginx + PM2** para frontend y backend en la misma instancia
 
-- **Backend**
-  - Inspired by hexagonal / ports and adapters:
-    - **Domain**: pure entities and business rules (stock reservation, payment status).
-    - **Application**: services and DTOs; payment flow orchestrates Wompi and stock updates.
-    - **Infrastructure**: DynamoDB repositories, Wompi HTTP client implementation.
-    - **Presentation**: NestJS controllers exposing a small REST API.
-  - Global validation with `ValidationPipe` and JSON logging for HTTP requests.
+Para EC2 existe el script:
 
-- **Frontend**
-  - React SPA with Redux Toolkit following a simple Flux‑like data flow.
-  - Mobile‑first layout using CSS flexbox, with a single-page experience and modals/backdrops instead of routes.
+```bash
+./deploy-ec2.sh
+```
 
-## Security notes
+que actualiza repo, compila backend y frontend, reinicia PM2 y Nginx, y publica el `dist` del frontend.
 
-- Backend uses **Helmet** to add common security headers.  
-- `ValidationPipe` with `whitelist` and `forbidNonWhitelisted` protects DTOs from unexpected fields.  
-- Card data is kept only in memory on the frontend and never written to `localStorage` or the database.  
-- In production, the recommendation is to put both the API and the SPA behind HTTPS (e.g. CloudFront / ALB + API Gateway or similar).
+## Notas
 
-## Useful links
-
-- Wompi docs – quick start: https://docs.wompi.co/docs/colombia/inicio-rapido/  
-- Wompi docs – environments and keys: https://docs.wompi.co/docs/colombia/ambientes-y-llaves/  
-- AWS DynamoDB: https://docs.aws.amazon.com/dynamodb/  
-- Flexbox reference: https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+- El backend usa `Helmet` y `ValidationPipe`.
+- Los datos de tarjeta no se guardan en `localStorage` ni en DynamoDB.
+- El precio se almacena como `string` en DynamoDB y el stock como `number`.
+- En local y en AWS se usa **Wompi Sandbox**, no producción.
