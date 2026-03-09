@@ -154,17 +154,9 @@ npm test
 
 El repositorio quedó preparado para desplegar frontend y backend en una **EC2** usando **Nginx + PM2**.
 
-Para EC2 existe el script:
-
-```bash
-./deploy-ec2.sh
-```
-
-que actualiza repo, compila backend y frontend, reinicia PM2 y Nginx, y publica el `dist` del frontend.
-
 ## Notas
 
 - El backend usa `Helmet` y `ValidationPipe`.
 - Los datos de tarjeta no se guardan en `localStorage` ni en DynamoDB.
 - El precio se almacena como `string` en DynamoDB y el stock como `number`.
-- En local y en AWS se usa **Wompi Sandbox**, no producción.
+
